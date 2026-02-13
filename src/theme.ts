@@ -1,0 +1,24 @@
+const theme = {
+    colors: {
+        primary: '#007AFF',
+        success: '#34C759',
+        danger: '#FF3B30',
+        background: '#f5f5f5',
+        card: '#ffffff',
+        text: '#333333',
+        muted: '#999999',
+        border: '#dddddd',
+    },
+    spacing: {
+        xs: 6,
+        sm: 12,
+        md: 16,
+        lg: 24,
+    },
+    radii: {
+        sm: 8,
+        md: 12,
+    },
+};
+
+export default theme;
