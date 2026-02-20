@@ -49,7 +49,7 @@ export const HomeScreen = ({ navigation }: any) => {
 
         <ActionCard
           title="Vehiculos"
-          subtitle="Ver transacciones anteriores"
+          subtitle="Ver vehiculos registrados"
           icon="🚘"
           color="#55c035"
           background="#0000ff"

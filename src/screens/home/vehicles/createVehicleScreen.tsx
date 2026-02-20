@@ -192,7 +192,7 @@ export const CreateVehicleScreen = ({ navigation }: any) => {
     try {
       await createVehicle({
         plate_number: formData.plate_number.trim().toUpperCase(),
-        brand: formData.brand.trim(),  // ✅ AGREGAR ESTA LÍNEA
+        brand: formData.brand.trim(), // ✅ AGREGAR ESTA LÍNEA
         model: formData.model.trim() || undefined,
         color: formData.color.trim(),
         vehicle_type: formData.vehicle_type.trim(),

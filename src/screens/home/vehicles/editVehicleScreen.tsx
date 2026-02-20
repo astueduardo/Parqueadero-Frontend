@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
     View,
     Text,
@@ -40,23 +40,43 @@ const COMMON_COLORS = [
 export const EditVehicleScreen = ({ navigation, route }: any) => {
     const { vehicle } = route.params;
 
-    const [formData, setFormData] = useState({
+    // ✅ Valores originales para comparar cambios reales
+    const originalData = {
         plate_number: vehicle.plate_number || "",
         brand: vehicle.brand || "",
         color: vehicle.color || "",
         model: vehicle.model || "",
         vehicle_type: vehicle.vehicle_type || "",
         year: vehicle.year ? vehicle.year.toString() : "",
-    });
+    };
 
+    const [formData, setFormData] = useState(originalData);
     const [errors, setErrors] = useState<ValidationErrors>({});
     const [touched, setTouched] = useState<{ [key: string]: boolean }>({});
     const [loading, setLoading] = useState(false);
-    const [hasChanges, setHasChanges] = useState(false);
     const [showColorSuggestions, setShowColorSuggestions] = useState(false);
     const [showTypeSuggestions, setShowTypeSuggestions] = useState(false);
 
-    // Validaciones en tiempo real
+    // ✅ hasChanges calculado en tiempo real comparando con originales
+    const hasChanges =
+        formData.plate_number !== originalData.plate_number ||
+        formData.brand !== originalData.brand ||
+        formData.model !== originalData.model ||
+        formData.color !== originalData.color ||
+        formData.vehicle_type !== originalData.vehicle_type ||
+        formData.year !== originalData.year;
+
+    const getChangedFieldsCount = (): number => {
+        let count = 0;
+        if (formData.plate_number !== originalData.plate_number) count++;
+        if (formData.brand !== originalData.brand) count++;
+        if (formData.model !== originalData.model) count++;
+        if (formData.color !== originalData.color) count++;
+        if (formData.vehicle_type !== originalData.vehicle_type) count++;
+        if (formData.year !== originalData.year) count++;
+        return count;
+    };
+
     const validateField = useCallback((field: string, value: string): string | undefined => {
         switch (field) {
             case "plate_number":
@@ -70,34 +90,37 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                 if (!value.trim()) return "La marca es obligatoria";
                 if (value.length < 2) return "Nombre demasiado corto";
                 if (value.length > 50) return "Nombre demasiado largo";
+                if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) return "Solo letras y números";
+                return undefined;
+
+            case "model":
+                if (!value.trim()) return undefined;
+                if (value.length > 50) return "Nombre demasiado largo";
+                if (!/^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s.]+$/.test(value)) return "Solo letras y números";
                 return undefined;
 
             case "color":
                 if (!value.trim()) return "El color es obligatorio";
                 if (value.length < 3) return "Nombre demasiado corto";
                 if (value.length > 30) return "Nombre demasiado largo";
-                if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) return "Solo letras";
+                if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) return "Solo letras, sin números";
                 return undefined;
 
             case "vehicle_type":
                 if (!value.trim()) return "El tipo es obligatorio";
                 if (value.length < 3) return "Tipo demasiado corto";
                 if (value.length > 30) return "Tipo demasiado largo";
-                return undefined;
-
-            case "model":
-                if (value && value.length > 50) return "Nombre demasiado largo";
+                if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(value)) return "Solo letras, sin números";
                 return undefined;
 
             case "year":
-                if (value && value.trim()) {
-                    const yearNum = parseInt(value);
-                    const currentYear = new Date().getFullYear();
-                    if (isNaN(yearNum)) return "Año inválido";
-                    if (yearNum < 1900) return "Año muy antiguo";
-                    if (yearNum > currentYear + 1) return "Año futuro no válido";
-                    if (value.length !== 4) return "Debe tener 4 dígitos";
-                }
+                if (!value.trim()) return undefined;
+                if (!/^\d+$/.test(value)) return "Solo se permiten números";
+                const yearNum = parseInt(value);
+                const currentYear = new Date().getFullYear();
+                if (yearNum < 1900) return "Año muy antiguo";
+                if (yearNum > currentYear + 1) return "Año futuro no válido";
+                if (value.length !== 4) return "Debe tener 4 dígitos";
                 return undefined;
 
             default:
@@ -107,19 +130,14 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
 
     const handleChange = useCallback((field: string, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
-        setHasChanges(true);
 
-        // Validar solo si el campo ya fue tocado
         if (touched[field]) {
             const error = validateField(field, value);
             setErrors(prev => ({ ...prev, [field]: error }));
         }
 
-        // Mostrar sugerencias
-        if (field === "color" && value.length > 0) {
-            setShowColorSuggestions(true);
-        } else if (field === "color") {
-            setShowColorSuggestions(false);
+        if (field === "color") {
+            setShowColorSuggestions(value.length > 0);
         }
     }, [touched, validateField]);
 
@@ -128,140 +146,74 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
         const error = validateField(field, formData[field as keyof typeof formData]);
         setErrors(prev => ({ ...prev, [field]: error }));
 
-        // Ocultar sugerencias al perder foco
-        if (field === "color") {
-            setTimeout(() => setShowColorSuggestions(false), 200);
-        }
-        if (field === "vehicle_type") {
-            setTimeout(() => setShowTypeSuggestions(false), 200);
-        }
+        if (field === "color") setTimeout(() => setShowColorSuggestions(false), 200);
+        if (field === "vehicle_type") setTimeout(() => setShowTypeSuggestions(false), 200);
     }, [formData, validateField]);
 
     const validateForm = (): boolean => {
         const newErrors: ValidationErrors = {};
         let isValid = true;
 
-        // Validar solo campos obligatorios
         const requiredFields: (keyof typeof formData)[] = ["plate_number", "brand", "color", "vehicle_type"];
-
         requiredFields.forEach(field => {
             const error = validateField(field, formData[field]);
-            if (error) {
-                newErrors[field as keyof ValidationErrors] = error;
-                isValid = false;
-            }
+            if (error) { newErrors[field as keyof ValidationErrors] = error; isValid = false; }
         });
 
-        // Validar campos opcionales si tienen valor
         if (formData.model) {
             const modelError = validateField("model", formData.model);
-            if (modelError) {
-                newErrors.model = modelError;
-                isValid = false;
-            }
+            if (modelError) { newErrors.model = modelError; isValid = false; }
         }
-
         if (formData.year) {
             const yearError = validateField("year", formData.year);
-            if (yearError) {
-                newErrors.year = yearError;
-                isValid = false;
-            }
+            if (yearError) { newErrors.year = yearError; isValid = false; }
         }
 
         setErrors(newErrors);
-        setTouched({
-            plate_number: true,
-            brand: true,
-            color: true,
-            vehicle_type: true,
-            model: true,
-            year: true,
-        });
-
+        setTouched({ plate_number: true, brand: true, color: true, vehicle_type: true, model: true, year: true });
         return isValid;
     };
 
     const handleSave = async () => {
         if (!validateForm()) {
-            Alert.alert(
-                "Campos incompletos",
-                "Por favor corrige los errores antes de continuar.",
-                [{ text: "Entendido" }]
-            );
+            Alert.alert("Campos incompletos", "Por favor corrige los errores antes de continuar.");
             return;
         }
 
         if (!hasChanges) {
-            Alert.alert(
-                "Sin cambios",
-                "No has realizado ningún cambio.",
-                [{ text: "OK" }]
-            );
+            Alert.alert("Sin cambios", "No has realizado ningún cambio.");
             return;
         }
 
-        Alert.alert(
-            "Confirmar cambios",
-            "¿Deseas guardar los cambios realizados?",
-            [
-                { text: "Cancelar", style: "cancel" },
-                {
-                    text: "Guardar",
-                    onPress: async () => {
-                        setLoading(true);
-                        try {
-                            await updateVehicle(vehicle.id, {
-                                plate_number: formData.plate_number.trim().toUpperCase(),
-                                brand: formData.brand.trim(),
-                                model: formData.model.trim() || undefined,
-                                color: formData.color.trim(),
-                                vehicle_type: formData.vehicle_type.trim(),
-                                year: formData.year ? parseInt(formData.year) : undefined,
-                            });
+        // ✅ Guarda directo, sin Alert de confirmación intermedio
+        setLoading(true);
+        try {
+            await updateVehicle(vehicle.vehicle_id, {
+                plate_number: formData.plate_number.trim().toUpperCase(),
+                brand: formData.brand.trim(),
+                model: formData.model.trim() || undefined,
+                color: formData.color.trim(),
+                vehicle_type: formData.vehicle_type.trim(),
+                year: formData.year ? parseInt(formData.year) : undefined,
+            });
 
-                            Alert.alert(
-                                "¡Actualizado!",
-                                "Los cambios se guardaron correctamente.",
-                                [{ text: "OK", onPress: () => navigation.goBack() }]
-                            );
-                        } catch (err: any) {
-                            const errorMessage = err.response?.data?.message ||
-                                "No se pudo actualizar el vehículo. Verifica tu conexión.";
-                            Alert.alert("Error", errorMessage);
-                        } finally {
-                            setLoading(false);
-                        }
-                    },
-                },
-            ]
-        );
-    };
-
-    const handleCancel = () => {
-        if (hasChanges) {
-            Alert.alert(
-                "¿Descartar cambios?",
-                "Tienes cambios sin guardar. ¿Deseas salir de todas formas?",
-                [
-                    { text: "Continuar editando", style: "cancel" },
-                    { text: "Descartar", style: "destructive", onPress: () => navigation.goBack() },
-                ]
-            );
-        } else {
-            navigation.goBack();
+            Alert.alert("¡Actualizado!", "Los cambios se guardaron correctamente.", [
+                { text: "OK", onPress: () => navigation.goBack() }
+            ]);
+        } catch (err: any) {
+            Alert.alert("Error", err.response?.data?.message || "No se pudo actualizar el vehículo.");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const selectColor = (color: string) => {
-        handleChange("color", color);
-        setShowColorSuggestions(false);
+    // ✅ Cancelar: solo pregunta si hay cambios reales
+    const handleCancel = () => {
+        navigation.goBack();
     };
 
-    const selectVehicleType = (type: string) => {
-        handleChange("vehicle_type", type);
-        setShowTypeSuggestions(false);
-    };
+    const selectColor = (color: string) => { handleChange("color", color); setShowColorSuggestions(false); };
+    const selectVehicleType = (type: string) => { handleChange("vehicle_type", type); setShowTypeSuggestions(false); };
 
     const renderInput = (
         field: keyof typeof formData,
@@ -305,9 +257,7 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                         value={formData[field]}
                         onChangeText={(value) => handleChange(field, value)}
                         onBlur={() => handleBlur(field)}
-                        onFocus={() => {
-                            if (field === "vehicle_type") setShowTypeSuggestions(true);
-                        }}
+                        onFocus={() => { if (field === "vehicle_type") setShowTypeSuggestions(true); }}
                         style={styles.input}
                         editable={!loading}
                         keyboardType={options.keyboardType}
@@ -316,10 +266,7 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                         placeholderTextColor="#9CA3AF"
                     />
                     {hasValue && !loading && (
-                        <TouchableOpacity
-                            onPress={() => handleChange(field, "")}
-                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                        >
+                        <TouchableOpacity onPress={() => handleChange(field, "")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                             <Ionicons name="close-circle" size={20} color="#9CA3AF" />
                         </TouchableOpacity>
                     )}
@@ -330,31 +277,33 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
 
     return (
         <SafeAreaView style={styles.container}>
-            <KeyboardAvoidingView
-                style={{ flex: 1 }}
-                behavior={Platform.OS === "ios" ? "padding" : undefined}
-                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
-            >
+            <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+
                 {/* HEADER */}
                 <View style={styles.header}>
-                    <TouchableOpacity
-                        onPress={handleCancel}
-                        style={styles.backButton}
-                        disabled={loading}
-                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
+                    <TouchableOpacity onPress={handleCancel} style={styles.backButton} disabled={loading} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                         <Ionicons name="close" size={28} color="#111827" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Editar Vehículo</Text>
-                    <View style={{ width: 40 }} />
+
+                    <View style={{ flex: 1, alignItems: 'center' }}>
+                        <Text style={styles.headerTitle}>Editar Vehículo</Text>
+                        <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 2 }}>
+                            {vehicle.plate_number}
+                        </Text>
+                    </View>
+
+                    {/* Indicador de cambios */}
+                    <View style={{ width: 40, alignItems: 'flex-end' }}>
+                        {hasChanges && (
+                            <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: '#F59E0B' }} />
+                        )}
+                    </View>
                 </View>
 
                 {/* FORMULARIO */}
-                <ScrollView
-                    contentContainerStyle={styles.form}
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                >
+                <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+
+                    {/* ✅ CAMPOS QUE FALTABAN */}
                     {renderInput("plate_number", "Placa", "ABC-1234", "card-outline", {
                         autoCapitalize: "characters",
                         maxLength: 15,
@@ -373,12 +322,8 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                     {/* Color con sugerencias */}
                     <View style={styles.inputContainer}>
                         <View style={styles.labelRow}>
-                            <Text style={styles.label}>
-                                Color <Text style={styles.required}>*</Text>
-                            </Text>
-                            {touched.color && errors.color && (
-                                <Text style={styles.errorText}>{errors.color}</Text>
-                            )}
+                            <Text style={styles.label}>Color <Text style={styles.required}>*</Text></Text>
+                            {touched.color && errors.color && <Text style={styles.errorText}>{errors.color}</Text>}
                         </View>
 
                         <View style={[
@@ -386,12 +331,7 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                             touched.color && errors.color && styles.inputWrapperError,
                             formData.color.length > 0 && !errors.color && styles.inputWrapperFilled
                         ]}>
-                            <Ionicons
-                                name="color-palette-outline"
-                                size={20}
-                                color={errors.color ? "#EF4444" : formData.color ? "#2563EB" : "#6B7280"}
-                                style={styles.inputIcon}
-                            />
+                            <Ionicons name="color-palette-outline" size={20} color={errors.color ? "#EF4444" : formData.color ? "#2563EB" : "#6B7280"} style={styles.inputIcon} />
                             <TextInput
                                 placeholder="Rojo, Azul, Negro, etc."
                                 value={formData.color}
@@ -404,26 +344,18 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                                 placeholderTextColor="#9CA3AF"
                             />
                             {formData.color.length > 0 && !loading && (
-                                <TouchableOpacity
-                                    onPress={() => handleChange("color", "")}
-                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                >
+                                <TouchableOpacity onPress={() => handleChange("color", "")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                                     <Ionicons name="close-circle" size={20} color="#9CA3AF" />
                                 </TouchableOpacity>
                             )}
                         </View>
 
-                        {/* Sugerencias de colores */}
                         {showColorSuggestions && (
                             <View style={styles.suggestionsContainer}>
                                 <Text style={styles.suggestionsTitle}>Colores comunes:</Text>
                                 <View style={styles.suggestionsGrid}>
                                     {COMMON_COLORS.map((color) => (
-                                        <TouchableOpacity
-                                            key={color}
-                                            style={styles.suggestionChip}
-                                            onPress={() => selectColor(color)}
-                                        >
+                                        <TouchableOpacity key={color} style={styles.suggestionChip} onPress={() => selectColor(color)}>
                                             <Text style={styles.suggestionText}>{color}</Text>
                                         </TouchableOpacity>
                                     ))}
@@ -435,12 +367,8 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                     {/* Tipo de vehículo con sugerencias */}
                     <View style={styles.inputContainer}>
                         <View style={styles.labelRow}>
-                            <Text style={styles.label}>
-                                Tipo de vehículo <Text style={styles.required}>*</Text>
-                            </Text>
-                            {touched.vehicle_type && errors.vehicle_type && (
-                                <Text style={styles.errorText}>{errors.vehicle_type}</Text>
-                            )}
+                            <Text style={styles.label}>Tipo de vehículo <Text style={styles.required}>*</Text></Text>
+                            {touched.vehicle_type && errors.vehicle_type && <Text style={styles.errorText}>{errors.vehicle_type}</Text>}
                         </View>
 
                         <View style={[
@@ -448,12 +376,7 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                             touched.vehicle_type && errors.vehicle_type && styles.inputWrapperError,
                             formData.vehicle_type.length > 0 && !errors.vehicle_type && styles.inputWrapperFilled
                         ]}>
-                            <Ionicons
-                                name="options-outline"
-                                size={20}
-                                color={errors.vehicle_type ? "#EF4444" : formData.vehicle_type ? "#2563EB" : "#6B7280"}
-                                style={styles.inputIcon}
-                            />
+                            <Ionicons name="options-outline" size={20} color={errors.vehicle_type ? "#EF4444" : formData.vehicle_type ? "#2563EB" : "#6B7280"} style={styles.inputIcon} />
                             <TextInput
                                 placeholder="Sedán, SUV, Pickup, etc."
                                 value={formData.vehicle_type}
@@ -466,24 +389,16 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                                 placeholderTextColor="#9CA3AF"
                             />
                             {formData.vehicle_type.length > 0 && !loading && (
-                                <TouchableOpacity
-                                    onPress={() => handleChange("vehicle_type", "")}
-                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                                >
+                                <TouchableOpacity onPress={() => handleChange("vehicle_type", "")} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                                     <Ionicons name="close-circle" size={20} color="#9CA3AF" />
                                 </TouchableOpacity>
                             )}
                         </View>
 
-                        {/* Sugerencias de tipos */}
                         {showTypeSuggestions && (
                             <View style={styles.typeSuggestionsContainer}>
                                 {VEHICLE_TYPES.map((type) => (
-                                    <TouchableOpacity
-                                        key={type.label}
-                                        style={styles.typeSuggestionItem}
-                                        onPress={() => selectVehicleType(type.label)}
-                                    >
+                                    <TouchableOpacity key={type.label} style={styles.typeSuggestionItem} onPress={() => selectVehicleType(type.label)}>
                                         <Ionicons name={type.icon as any} size={24} color="#2563EB" />
                                         <Text style={styles.typeSuggestionText}>{type.label}</Text>
                                     </TouchableOpacity>
@@ -497,12 +412,14 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                         maxLength: 4,
                     })}
 
-                    {/* Botones */}
+                    {/* BOTONES */}
                     <View style={styles.buttonContainer}>
+
+                        {/* Guardar - deshabilitado si no hay cambios */}
                         <TouchableOpacity
-                            style={[styles.saveButton, loading && styles.saveButtonDisabled]}
+                            style={[styles.saveButton, (loading || !hasChanges) && styles.saveButtonDisabled]}
                             onPress={handleSave}
-                            disabled={loading}
+                            disabled={loading || !hasChanges}
                             activeOpacity={0.8}
                         >
                             {loading ? (
@@ -513,17 +430,15 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
                             ) : (
                                 <>
                                     <Ionicons name="checkmark-circle" size={24} color="#fff" />
-                                    <Text style={styles.saveButtonText}>Guardar Cambios</Text>
+                                    <Text style={styles.saveButtonText}>
+                                        Guardar Cambios{hasChanges ? ` (${getChangedFieldsCount()})` : ''}
+                                    </Text>
                                 </>
                             )}
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={styles.cancelButton}
-                            onPress={handleCancel}
-                            disabled={loading}
-                            activeOpacity={0.7}
-                        >
+                        {/* Cancelar */}
+                        <TouchableOpacity style={styles.cancelButton} onPress={handleCancel} disabled={loading} activeOpacity={0.7}>
                             <Text style={styles.cancelButtonText}>Cancelar</Text>
                         </TouchableOpacity>
                     </View>

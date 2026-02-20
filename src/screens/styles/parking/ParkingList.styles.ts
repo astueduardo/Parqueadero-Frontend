@@ -63,7 +63,19 @@ export const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
     padding: 14,
-    margin: 12
+    margin: 12,
+
+    borderWidth: 1,
+    borderColor: "#000",
+
+    // iOS
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+
+    // Android
+    elevation: 6,
   },
   cardHeader: {
     flexDirection: "row",

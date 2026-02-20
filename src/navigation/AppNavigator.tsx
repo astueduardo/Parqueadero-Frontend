@@ -13,6 +13,7 @@ import { useAuth } from "../hooks/useAuth";
 import { AuthContext } from "../context/AuthContext";
 import { useContext } from "react";
 import { AdminUsersScreen } from "../screens/admin/AdminUsersScreen";
+import { EditVehicleScreen } from "../screens/home/vehicles/editVehicleScreen";
 const Stack = createNativeStackNavigator();
 
 export const AppNavigator = () => {
@@ -34,7 +35,7 @@ export const AppNavigator = () => {
       <Stack.Screen name="ReservationForm" component={ReservationFormScreen} />
       <Stack.Screen name="Vehicles" component={VehicleListScreen} />
       <Stack.Screen name="CreateVehicle" component={CreateVehicleScreen} />
-      <Stack.Screen name="EditVehicle" component={CreateVehicleScreen} options={{ title: 'Editar Vehículo' }} />
+      <Stack.Screen name="EditVehicle" component={EditVehicleScreen} options={{ title: 'Editar Vehículo' }} />
       <Stack.Screen name="History" component={HistoryScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
     </Stack.Navigator>

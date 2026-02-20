@@ -35,9 +35,13 @@ export const VehicleListScreen = ({ navigation }: any) => {
 
   const loadVehicles = async () => {
     try {
+      console.log('📋 Cargando vehículos...');
       const data = await getMyVehicles();
+      console.log('✅ Vehículos cargados:', data.length);
+      console.log('📝 IDs de vehículos:', data.map(v => ({ id: v.vehicle_id, plate: v.plate_number })));
       setVehicles(data);
     } catch (error: any) {
+      console.error('❌ Error al cargar vehículos:', error);
       const errorMessage = error.response?.data?.message ||
         "No se pudieron cargar los vehículos. Verifica tu conexión.";
       Alert.alert("Error al cargar", errorMessage);
@@ -52,33 +56,62 @@ export const VehicleListScreen = ({ navigation }: any) => {
     setRefreshing(false);
   };
 
-  const handleDelete = useCallback((id: string, plateNumber: string) => {
-    Alert.alert(
-      "Eliminar vehículo",
-      `¿Estás seguro de eliminar el vehículo con placa ${plateNumber}?\n\nEsta acción no se puede deshacer.`,
-      [
-        {
-          text: "Cancelar",
-          style: "cancel",
-          onPress: () => console.log("Cancelado")
-        },
-        {
-          text: "Eliminar",
-          style: "destructive",
-          onPress: () => confirmDelete(id, plateNumber),
-        },
-      ],
-      { cancelable: true }
-    );
-  }, []);
+  const handleDelete = useCallback(async (vehicle_id: string, plateNumber: string) => {
+    console.log('🗑️  handleDelete (DIRECTO - SIN ALERT) llamado:');
+    console.log('  vehicle_id:', vehicle_id);
+    console.log('  plateNumber:', plateNumber);
 
-  const confirmDelete = async (id: string, plateNumber: string) => {
-    setDeletingId(id);
+    if (!vehicle_id) {
+      console.error('❌ vehicle_id es undefined/null!');
+      Alert.alert("Error", "ID de vehículo inválido");
+      return;
+    }
+
+    // ⚠️ ELIMINA DIRECTAMENTE SIN CONFIRMAR
+    setDeletingId(vehicle_id);
+
     try {
-      await deleteVehicle(id);
+      console.log('📤 Llamando a deleteVehicle API DIRECTAMENTE...');
 
-      // Animación de eliminación
-      setVehicles((prev) => prev.filter((vehicle) => vehicle.id !== id));
+      await deleteVehicle(vehicle_id);
+
+      console.log('✅ API respondió exitosamente');
+
+      setVehicles((prev) => prev.filter((v) => v.vehicle_id !== vehicle_id));
+
+      Alert.alert("¡Listo!", `${plateNumber} eliminado correctamente.`);
+      console.log('✅ Eliminación completada');
+    } catch (error: any) {
+      console.error('❌ ERROR:');
+      console.error('  Status:', error.response?.status);
+      console.error('  Data:', error.response?.data);
+      console.error('  Message:', error.response?.data?.message);
+
+      Alert.alert("Error", error.response?.data?.message || "Error al eliminar");
+    } finally {
+      setDeletingId(null);
+    }
+  }, []);
+  const confirmDelete = async (vehicle_id: string, plateNumber: string) => {
+    console.log('🚀 confirmDelete - Iniciando eliminación:');
+    console.log('  vehicle_id:', vehicle_id);
+    console.log('  vehicle_id tipo:', typeof vehicle_id);
+    console.log('  plateNumber:', plateNumber);
+
+    setDeletingId(vehicle_id);
+
+    try {
+      console.log('📤 Llamando a deleteVehicle API...');
+      await deleteVehicle(vehicle_id);
+
+      console.log('✅ API respondió exitosamente');
+
+      // Animación de eliminación - actualizar estado local
+      setVehicles((prev) => {
+        const newVehicles = prev.filter((vehicle) => vehicle.vehicle_id !== vehicle_id);
+        console.log('📊 Vehículos después de eliminar:', newVehicles.length);
+        return newVehicles;
+      });
 
       // Feedback exitoso
       Alert.alert(
@@ -86,22 +119,44 @@ export const VehicleListScreen = ({ navigation }: any) => {
         `El vehículo ${plateNumber} fue eliminado correctamente.`,
         [{ text: "OK" }]
       );
+
+      console.log('✅ Eliminación completada con éxito');
     } catch (error: any) {
+      console.error('❌ Error en confirmDelete:');
+      console.error('  Error completo:', error);
+      console.error('  Error.response:', error.response);
+      console.error('  Error.response.data:', error.response?.data);
+      console.error('  Error.response.status:', error.response?.status);
+      console.error('  Error.message:', error.message);
+
       const errorMessage = error.response?.data?.message ||
         "No se pudo eliminar el vehículo. Intenta nuevamente.";
-      Alert.alert("Error", errorMessage);
+
+      Alert.alert("Error al eliminar", errorMessage);
     } finally {
       setDeletingId(null);
+      console.log('🏁 confirmDelete finalizado');
     }
   };
 
   const handleEdit = useCallback((vehicle: Vehicle) => {
+    console.log('✏️  handleEdit llamado para:', vehicle.plate_number);
+    console.log('  vehicle_id:', vehicle.vehicle_id);
     navigation.navigate("EditVehicle", { vehicle });
   }, [navigation]);
 
   const renderItem = useCallback(
     ({ item, index }: { item: Vehicle; index: number }) => {
-      const isDeleting = deletingId === item.id;
+      const isDeleting = deletingId === item.vehicle_id;
+
+      // ✅ Log para verificar que tenemos vehicle_id
+      if (index === 0) {
+        console.log('🔍 Ejemplo de item renderizado:', {
+          vehicle_id: item.vehicle_id,
+          plate_number: item.plate_number,
+          brand: item.brand,
+        });
+      }
 
       return (
         <Animated.View
@@ -124,8 +179,13 @@ export const VehicleListScreen = ({ navigation }: any) => {
                   <Text style={styles.plate}>{item.plate_number}</Text>
                 </View>
 
+                {/* ✅ BOTÓN DE ELIMINAR - CON DEBUGGING */}
                 <TouchableOpacity
-                  onPress={() => handleDelete(item.id, item.plate_number)}
+                  onPress={() => {
+                    console.log('🖱️  Botón eliminar presionado para:', item.plate_number);
+                    console.log('  vehicle_id del item:', item.vehicle_id);
+                    handleDelete(item.vehicle_id, item.plate_number);
+                  }}
                   hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                   style={styles.deleteButton}
                   disabled={isDeleting}
@@ -166,7 +226,7 @@ export const VehicleListScreen = ({ navigation }: any) => {
 
               {/* Indicador de edición */}
               <View style={styles.editIndicator}>
-                <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+                <Ionicons name="chevron-forward" size={20} color="#1668f5" />
               </View>
             </View>
           </TouchableOpacity>
@@ -218,7 +278,7 @@ export const VehicleListScreen = ({ navigation }: any) => {
       {/* LISTA */}
       <FlatList
         data={vehicles}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.vehicle_id}
         renderItem={renderItem}
         refreshControl={
           <RefreshControl

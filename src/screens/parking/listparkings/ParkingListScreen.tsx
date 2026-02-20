@@ -86,12 +86,12 @@ export const ParkingListScreen = ({ navigation }: any) => {
         {/* Info row - TIEMPO PRIMERO, DISTANCIA DESPUÉS */}
         <View style={styles.infoRow}>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Ionicons name="time-outline" size={14} color="#374151" />
+            <Ionicons name="time-outline" size={14} color="#383a38" />
             <Text style={styles.infoText}> {item.etaMinutes} min</Text>
           </View>
 
           <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Ionicons name="navigate-outline" size={14} color="#374151" />
+            <Ionicons name="navigate-outline" size={14} color="#1d68e0" />
             <Text style={styles.infoText}> {item.distance} km</Text>
           </View>
 
