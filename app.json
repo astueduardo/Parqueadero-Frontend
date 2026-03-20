@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "mobile",
-    "slug": "mobile",
+    "slug": "movilapp",
     "scheme": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -35,8 +35,9 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "4f18e42b-45a6-470c-a929-27d38b1fddb2"
+        "projectId": "e049bb10-b2ab-4b90-be42-801fe6eda7de"
       }
-    }
+    },
+    "owner": "astuard"
   }
 }

@@ -9,7 +9,6 @@ const getApiUrl = () => {
         return process.env.EXPO_PUBLIC_API_URL;
     }
 
-    // Fallback local
     if (Platform.OS === 'android') {
         return 'http://10.0.2.2:3001/api';
     }
