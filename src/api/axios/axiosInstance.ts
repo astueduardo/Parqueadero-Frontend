@@ -4,23 +4,19 @@ import { Platform } from 'react-native';
 
 // Función para obtener la URL según la plataforma
 const getApiUrl = () => {
-    console.log('📱 Platform.OS:', Platform.OS); // Para debug
-
-    //https://parqueadero-bakend.onrender.com parqueadero en la nube
-
-    if (Platform.OS === 'web') {
-        return 'https://parqueadero-bakend.onrender.com';
+    // Si hay variable de entorno, úsala (producción/Render)
+    if (process.env.EXPO_PUBLIC_API_URL) {
+        return process.env.EXPO_PUBLIC_API_URL;
     }
 
+    // Fallback local
     if (Platform.OS === 'android') {
         return 'http://10.0.2.2:3001/api';
     }
 
     return 'http://192.168.10.104:3001/api';
 };
-
 const API_BASE_URL = getApiUrl();
-console.log('🔗 API_BASE_URL:', API_BASE_URL); // Debe mostrar puerto 3001
 
 class ApiService {
     api: AxiosInstance;
@@ -35,12 +31,8 @@ class ApiService {
                 const token = await AsyncStorage.getItem('access_token');
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`;
-                    console.log('[ApiService] Token:', token);
                 }
-                console.log('[ApiService] Request:', config.method?.toUpperCase(), config.url);
                 const fullUrl = `${config.baseURL || ''}${config.url || ''}`;
-                console.log('[ApiService] Full URL:', fullUrl);
-                // Debug adicional
                 return config;
             },
             (error) => Promise.reject(error),
@@ -49,7 +41,6 @@ class ApiService {
         this.api.interceptors.response.use(
             (resp) => resp,
             (error) => {
-                console.error('[ApiService] Response error:', error?.config?.method?.toUpperCase(), error?.config?.url, error?.message);
                 return Promise.reject(error);
             },
         );
@@ -72,7 +63,6 @@ class ApiService {
             const response = await this.api.get('/vehicles/my');
             return response.data; // Devuelve los vehículos del usuario
         } catch (error) {
-            console.error('[VehicleService] Error al obtener vehículos:', error);
             throw error; // Puedes manejar errores aquí si es necesario
         }
     }
