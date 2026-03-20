@@ -18,9 +18,9 @@ export interface AuthResponse {
     id: string;
     name: string;
     email: string;
-    role?: "user" | "admin";
+    role?: "user" | "admin" | "owner" | "operator";
     auth_provider?: "local" | "google";
-    createdAt: string;
+    created_at?: string;
   };
 }
 
@@ -30,8 +30,8 @@ export interface UserProfile {
   email: string;
   role?: string;
   googleId?: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export const authApi = {

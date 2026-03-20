@@ -4,9 +4,9 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role?: "user" | "admin";
-  createdAt?: string;
-  updatedAt?: string;
+  role?: "user" | "admin" | "owner" | "operator";
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateUserDto {
@@ -22,7 +22,7 @@ export interface UpdateUserDto {
 }
 
 export interface SetRoleDto {
-  role: "user" | "admin";
+  role?: "user" | "admin" | "owner" | "operator";
 }
 export const usersApi = {
   list: () => api.api.get("/users").then((r) => r.data as User[]),

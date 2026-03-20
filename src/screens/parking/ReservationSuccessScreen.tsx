@@ -3,13 +3,14 @@ import {
     View,
     Text,
     TouchableOpacity,
-    SafeAreaView,
     ScrollView,
     Alert,
     Image,
     Share,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import QRCode from 'react-native-qrcode-svg';
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface ReservationSuccessProps {
     route: any;
@@ -27,10 +28,10 @@ Reserva confirmada ✅
 ━━━━━━━━━━━━━━━━━━━━━
 🅿️ Parqueadero: ${parking.name}
 📍 Dirección: ${parking.address}
-🚗 Espacio: ${space.number}
+🚗 Espacio: ${space.code}
 ⏰ Llegada: ${arrivalTime}
 🚫 Salida: ${departureTime}
-💵 Total: $${total.toFixed(2)}
+💵 Total: $${Number(total)}
 🎫 Código: ${reservation.qr_code}
 ━━━━━━━━━━━━━━━━━━━━━
             `.trim();
@@ -83,14 +84,14 @@ Reserva confirmada ✅
                         ¡Reserva confirmada!
                     </Text>
                     <Text style={{ fontSize: 14, color: "#6B7280", marginTop: 4 }}>
-                        Tu estacionamiento está reservado
+                        <Text>Tu estacionamiento está reservado</Text>
                     </Text>
                 </View>
 
                 {/* Detalles */}
                 <View style={{ marginHorizontal: 16, backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 16 }}>
                     <Text style={{ fontSize: 18, fontWeight: "600", marginBottom: 12 }}>
-                        Detalles de la reserva
+                        <Text>Detalles de la reserva</Text>
                     </Text>
 
                     <View style={{ borderBottomWidth: 1, borderBottomColor: "#E5E7EB", paddingVertical: 8 }}>
@@ -108,7 +109,7 @@ Reserva confirmada ✅
                     <View style={{ borderBottomWidth: 1, borderBottomColor: "#E5E7EB", paddingVertical: 8 }}>
                         <Text style={{ color: "#6B7280", fontSize: 12 }}>Espacio</Text>
                         <Text style={{ fontSize: 16, fontWeight: "500", color: "#111827" }}>
-                            {space.number}
+                            {space.code}
                         </Text>
                     </View>
 
@@ -122,39 +123,41 @@ Reserva confirmada ✅
                     <View style={{ paddingVertical: 8 }}>
                         <Text style={{ color: "#6B7280", fontSize: 12 }}>Total</Text>
                         <Text style={{ fontSize: 18, fontWeight: "700", color: "#2563EB" }}>
-                            ${total.toFixed(2)}
+                            ${Number(total).toFixed(2)}
                         </Text>
                     </View>
                 </View>
 
                 {/* QR Code */}
-                {reservation.qr_image_url ? (
+                {reservation.qr_code ? (
                     <View style={{ marginHorizontal: 16, backgroundColor: "#FFF", borderRadius: 12, padding: 16, alignItems: "center", marginBottom: 16 }}>
-                        <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 12 }}>
-                            Código QR
+                        <Text style={{ fontSize: 16, fontWeight: "600", marginBottom: 16 }}>
+                            <Text>Código QR de entrada</Text>
                         </Text>
-                        <Image
-                            source={{ uri: reservation.qr_image_url }}
-                            style={{ width: 200, height: 200 }}
-                            resizeMode="contain"
+                        <QRCode
+                            value={reservation.qr_code}
+                            size={200}
+                            color="#111827"
+                            backgroundColor="#FFFFFF"
                         />
-                        <Text style={{ fontSize: 12, color: "#6B7280", marginTop: 8, textAlign: "center" }}>
-                            Escanea este código al llegar
+                        <Text style={{ fontSize: 12, color: "#6B7280", marginTop: 12, textAlign: "center" }}>
+                            <Text>Muestra este código al llegar al parqueadero</Text>
                         </Text>
                     </View>
                 ) : (
                     <View style={{ marginHorizontal: 16, backgroundColor: "#FFF", borderRadius: 12, padding: 16, alignItems: "center", marginBottom: 16 }}>
                         <Ionicons name="qr-code" size={80} color="#D1D5DB" />
                         <Text style={{ fontSize: 12, color: "#6B7280", marginTop: 8 }}>
-                            Código QR será generado pronto
+                            <Text>Código QR no disponible</Text>
                         </Text>
                     </View>
-                )}
+                )
+                }
 
                 {/* Información del código */}
                 <View style={{ marginHorizontal: 16, backgroundColor: "#FFF", borderRadius: 12, padding: 16, marginBottom: 16 }}>
                     <Text style={{ fontSize: 12, color: "#6B7280", marginBottom: 4 }}>
-                        Código de reserva
+                        <Text>Código de reserva</Text>
                     </Text>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                         <Text
@@ -185,7 +188,7 @@ Reserva confirmada ✅
                         onPress={handleShareReservation}
                     >
                         <Text style={{ color: "#FFF", fontWeight: "600", fontSize: 16 }}>
-                            Compartir reserva
+                            <Text>Compartir reserva</Text>
                         </Text>
                     </TouchableOpacity>
 
@@ -199,7 +202,7 @@ Reserva confirmada ✅
                         onPress={handleGoHome}
                     >
                         <Text style={{ color: "#111827", fontWeight: "600", fontSize: 16 }}>
-                            Volver al inicio
+                            <Text>Volver al inicio</Text>
                         </Text>
                     </TouchableOpacity>
                 </View>

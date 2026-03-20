@@ -7,14 +7,14 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { createVehicle } from "../../../api/vehiculo/vehicles.api";
-import { styles } from "../../styles/vehicles/vehicleCreate.styles";
+import { styles } from "../../../styles/vehicles/vehicleCreate.styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 interface ValidationErrors {
   plate_number?: string;
   brand?: string;

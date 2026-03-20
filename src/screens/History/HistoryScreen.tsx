@@ -1,9 +1,9 @@
 import React from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { styles } from "../styles/History/History.styles";
+import { styles } from "../../styles/History/History.styles";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const mockHistory = [
   {

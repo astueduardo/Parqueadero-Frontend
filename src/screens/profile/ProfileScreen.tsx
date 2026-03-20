@@ -6,13 +6,12 @@ import {
   TouchableOpacity,
   ScrollView,
   Image,
-  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
 import { useNavigation } from '@react-navigation/native';
-import { styles } from '../styles/home/profile.styles';
-
+import { styles } from '../../styles/home/profile.styles';
+import { SafeAreaView } from 'react-native-safe-area-context';
 export const ProfileScreen: React.FC = () => {
   const auth = useContext(AuthContext);
   const navigation = useNavigation<any>();
@@ -35,9 +34,9 @@ export const ProfileScreen: React.FC = () => {
         {/* User Card */}
         <View style={styles.card}>
           <View style={styles.userRow}>
-              <View style={styles.avatarPlaceholder}>
+            <View style={styles.avatarPlaceholder}>
               <Ionicons name="person" size={36} color="#2563EB" />
-          </View>
+            </View>
             <View>
               <Text style={styles.name}>{user?.name}</Text>
               <Text style={styles.subtext}>Usuario verificado</Text>

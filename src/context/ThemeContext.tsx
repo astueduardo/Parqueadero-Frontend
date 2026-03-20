@@ -1,40 +1,62 @@
-import React, { createContext, useState, ReactNode } from 'react';
+// context/ThemeContext.tsx
+import React, { createContext, useState, useContext, ReactNode } from 'react';
+import { lightTheme, darkTheme, Theme } from '../utils/theme';
 
 export type ThemeType = 'light' | 'dark';
 
-export interface ThemeContextType {
+interface ThemeContextType {
   theme: ThemeType;
+  colors: Theme['colors'];
+  spacing: Theme['spacing'];
+  radius: Theme['radius'];
+  fonts: Theme['fonts'];
+  typography: Theme['typography'];
   toggleTheme: () => void;
-  setTheme: (theme: ThemeType) => void;
+  isDark: boolean;
 }
 
-export const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 interface ThemeProviderProps {
   children: ReactNode;
   initialTheme?: ThemeType;
 }
 
-export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children, initialTheme = 'light' }) => {
-  const [theme, setThemeState] = useState<ThemeType>(initialTheme);
+export const ThemeProvider: React.FC<ThemeProviderProps> = ({
+  children,
+  initialTheme = 'light'
+}) => {
+  const [themeType, setThemeType] = useState<ThemeType>(initialTheme);
+
+  const currentTheme = themeType === 'light' ? lightTheme : darkTheme;
 
   const toggleTheme = () => {
-    setThemeState((prev) => (prev === 'light' ? 'dark' : 'light'));
-  };
-
-  const setTheme = (newTheme: ThemeType) => {
-    setThemeState(newTheme);
+    setThemeType(prev => prev === 'light' ? 'dark' : 'light');
   };
 
   return (
     <ThemeContext.Provider
       value={{
-        theme,
+        theme: themeType,
+        colors: currentTheme.colors,
+        spacing: currentTheme.spacing,
+        radius: currentTheme.radius,
+        fonts: currentTheme.fonts,
+        typography: currentTheme.typography,
         toggleTheme,
-        setTheme,
+        isDark: themeType === 'dark',
       }}
     >
       {children}
     </ThemeContext.Provider>
   );
+};
+
+// Hook personalizado
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme debe usarse dentro de ThemeProvider');
+  }
+  return context;
 };

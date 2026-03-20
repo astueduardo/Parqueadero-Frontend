@@ -6,8 +6,10 @@ import { Platform } from 'react-native';
 const getApiUrl = () => {
     console.log('📱 Platform.OS:', Platform.OS); // Para debug
 
+    //https://parqueadero-bakend.onrender.com parqueadero en la nube
+
     if (Platform.OS === 'web') {
-        return 'http://localhost:3001/api';
+        return 'https://parqueadero-bakend.onrender.com';
     }
 
     if (Platform.OS === 'android') {

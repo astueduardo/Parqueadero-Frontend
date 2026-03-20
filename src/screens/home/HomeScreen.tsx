@@ -1,4 +1,5 @@
-import React from "react";
+// screens/home/HomeScreen.tsx
+import React, { useMemo } from "react";
 import {
   View,
   Text,
@@ -7,72 +8,83 @@ import {
   SafeAreaView,
   StatusBar,
 } from "react-native";
-import { styles } from "../styles/home/HomeScreen.styles";
+
+// Hooks
+import { useTheme } from "../../context/ThemeContext";
+import { useAuth } from "../../hooks/useAuth";
+
+// Styles
+import { createHomeStyles } from "../../styles/home/HomeScreen.styles";
+
+// Shared components (podrías mover ActionCard e InfoCard a shared/components)
+import { ActionCard } from "../../shared/components/actionsCards";
+import { InfoCard } from "../../shared/components/InfoCards";
 
 export const HomeScreen = ({ navigation }: any) => {
+  const { colors, isDark } = useTheme();
+  const { user } = useAuth();
+
+  // Memoizar estilos para evitar recreaciones innecesarias
+  const styles = useMemo(() => createHomeStyles(colors), [colors]);
+
+  const userName = user?.name || "Juan";
+  const userInitial = userName.charAt(0).toUpperCase();
+
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
+      <StatusBar
+        barStyle={isDark ? "light-content" : "dark-content"}
+        backgroundColor={colors.header}
+      />
 
       {/* Header */}
       <View style={styles.header}>
         <View>
           <Text style={styles.appName}>ParkEasy</Text>
-          <Text style={styles.greeting}>Hola, Juan!</Text>
+          <Text style={styles.greeting}>Hola, {userName}!</Text>
         </View>
 
         <TouchableOpacity
           style={styles.avatar}
           onPress={() => navigation.navigate("Profile")}
           accessibilityLabel="Ir al perfil"
+          activeOpacity={0.7}
         >
-          <Text style={styles.avatarText}>J</Text>
+          <Text style={styles.avatarText}>{userInitial}</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        {/* Cards */}
+      <ScrollView
+        contentContainerStyle={styles.content}
+        showsVerticalScrollIndicator={false}
+      >
+
+        {/* Cards principales */}
         <ActionCard
           title="Reservar"
           subtitle="Buscar y reservar un lugar"
           icon="📍"
-          color="#f0b923"
+          color={colors.warning}
           onPress={() => navigation.navigate("ParkingList")}
         />
+
         <ActionCard
           title="Ver reservaciones"
-          subtitle=" Historial de reservaciones"
+          subtitle="Historial de reservaciones"
           icon="🗓️"
-          color="#3B82F6"
+          color={colors.info}
           onPress={() => navigation.navigate("History")}
         />
 
         <ActionCard
-          title="Vehiculos"
-          subtitle="Ver vehiculos registrados"
+          title="Vehículos"
+          subtitle="Ver vehículos registrados"
           icon="🚘"
-          color="#55c035"
-          background="#0000ff"
+          color={colors.vehicle}
           onPress={() => navigation.navigate("Vehicles")}
         />
+
       </ScrollView>
     </SafeAreaView>
   );
 };
-
-const ActionCard = ({ title, subtitle, icon, color, onPress }: any) => (
-  <TouchableOpacity
-    style={[styles.card, { borderColor: color }]}
-    onPress={onPress}
-    activeOpacity={0.85}
-  >
-    <View style={[styles.iconContainer, { backgroundColor: color }]}>
-      <Text style={styles.icon}>{icon}</Text>
-    </View>
-
-    <View style={styles.cardText}>
-      <Text style={styles.cardTitle}>{title}</Text>
-      <Text style={styles.cardSubtitle}>{subtitle}</Text>
-    </View>
-  </TouchableOpacity>
-);

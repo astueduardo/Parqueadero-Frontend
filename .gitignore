@@ -43,3 +43,4 @@ yarn-error.*
 /README.md
 /COMPLETION_SUMMARY.txt
 /PROJECT_CHECKLIST.md
+/config.js

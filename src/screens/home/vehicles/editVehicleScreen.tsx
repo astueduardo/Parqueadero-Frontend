@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import {
     View,
     Text,
@@ -6,15 +6,14 @@ import {
     TouchableOpacity,
     Alert,
     ScrollView,
-    SafeAreaView,
     KeyboardAvoidingView,
     Platform,
     ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { updateVehicle } from "../../../api/vehiculo/vehicles.api";
-import { styles } from "../../styles/vehicles/VehicleEdit.styles";
-
+import { styles } from "../../../styles/vehicles/VehicleEdit.styles";
+import { SafeAreaView } from "react-native-safe-area-context";
 interface ValidationErrors {
     plate_number?: string;
     brand?: string;
@@ -281,13 +280,11 @@ export const EditVehicleScreen = ({ navigation, route }: any) => {
 
                 {/* HEADER */}
                 <View style={styles.header}>
-                    <TouchableOpacity onPress={handleCancel} style={styles.backButton} disabled={loading} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                        <Ionicons name="close" size={28} color="#111827" />
+                    <TouchableOpacity onPress={handleCancel} style={{ padding: 8 }}>
+                        <Ionicons name="arrow-back" size={24} color="#111827" />
                     </TouchableOpacity>
-
                     <View style={{ flex: 1, alignItems: 'center' }}>
-                        <Text style={styles.headerTitle}>Editar Vehículo</Text>
-                        <Text style={{ fontSize: 14, color: '#6B7280', marginTop: 2 }}>
+                        <Text style={{ fontSize: 16, fontWeight: 'bold', marginTop: 2 }}>
                             {vehicle.plate_number}
                         </Text>
                     </View>

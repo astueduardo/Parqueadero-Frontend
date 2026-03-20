@@ -4,7 +4,6 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
   Alert,
   Animated,
@@ -12,14 +11,14 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "@react-navigation/native";
-
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   getMyVehicles,
   deleteVehicle,
   Vehicle,
 } from "../../../api/vehiculo/vehicles.api";
 
-import { styles } from "../../styles/vehicles/vehiclesList.styles";
+import { styles } from "../../../styles/vehicles/vehiclesList.styles";
 
 export const VehicleListScreen = ({ navigation }: any) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
