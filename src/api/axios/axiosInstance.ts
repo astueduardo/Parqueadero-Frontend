@@ -15,6 +15,10 @@ const getApiUrl = () => {
 
     return 'http://192.168.10.104:3001/api';
 };
+console.log('🔗 Conectando a:', getApiUrl());
+
+
+
 const API_BASE_URL = getApiUrl();
 
 class ApiService {
@@ -53,7 +57,10 @@ class ApiService {
                 await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
             }
             return response.data;
-        } catch (error) {
+        } catch (error: any) {
+            console.log('❌ ERROR STATUS:', error.response?.status);
+            console.log('❌ ERROR DATA:', JSON.stringify(error.response?.data));
+            console.log('❌ ERROR MESSAGE:', error.message);
             throw error;
         }
     }
