@@ -4,7 +4,6 @@ import {
     View,
     Text,
     TouchableOpacity,
-    SafeAreaView,
     ScrollView,
     TextInput,
     Alert,
@@ -13,7 +12,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { updateParkingLot } from "../../../api/parking/parkings.api";
-
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const InputField = ({ label, placeholder, value, onChangeText, keyboardType = "default", required = false }: any) => (
     <View>

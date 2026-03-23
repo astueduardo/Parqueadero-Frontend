@@ -17,7 +17,7 @@ import * as Google from "expo-auth-session/providers/google";
 import { useAuth } from "../../hooks/useAuth";
 import { validateEmail, validatePassword } from "../../utils/validators.Login.register";
 import { showError } from "../../utils/alerts.Login.Register";
-import { GOOGLE_CLIENT_ID, REDIRECT_URI } from "../../utils/config";
+import { REDIRECT_URI } from "../../utils/config";
 import { useTheme } from "../../context/ThemeContext";
 import { createLoginStyles } from "../../styles/auth/ScreenLogin.style";
 
@@ -41,13 +41,13 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
   const isButtonDisabled = loading || authLoading;
 
   const [request, response, promptAsync] = Google.useAuthRequest({
-    clientId: GOOGLE_CLIENT_ID,
-    webClientId: GOOGLE_CLIENT_ID,
+    androidClientId: "468037003282-jrfk3jmk9hpmq5525snuq68up8anb2eg.apps.googleusercontent.com",
+    iosClientId: "468037003282-jrfk3jmk9hpmq5525snuq68up8anb2eg.apps.googleusercontent.com",
+    webClientId: "468037003282-9sgvb02374hn9m1hc5uh05djligqbblp.apps.googleusercontent.com",
     responseType: "id_token",
     scopes: ["profile", "email"],
     redirectUri: REDIRECT_URI,
   });
-
   React.useEffect(() => {
     if (response?.type === "success") {
       const idToken =

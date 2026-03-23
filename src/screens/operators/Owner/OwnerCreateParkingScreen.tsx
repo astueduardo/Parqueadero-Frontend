@@ -4,13 +4,13 @@ import {
     View,
     Text,
     TouchableOpacity,
-    SafeAreaView,
     ScrollView,
     TextInput,
     Alert,
     ActivityIndicator,
     Switch,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { createParkingLot } from "../../../api/parking/parkings.api";
 

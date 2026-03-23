@@ -4,7 +4,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  SafeAreaView,
   ScrollView,
   ActivityIndicator,
   Alert,
@@ -15,7 +14,7 @@ import { getParkingLotById, ParkingLot } from "../../../api/parking/parkings.api
 import { getParkingAvailability, ParkingAvailability } from "../../../api/parking/parking-space";
 import { openGoogleMaps } from "../../../shared/utils/navegation";
 import { useAuth } from "../../../hooks/useAuth";
-
+import { SafeAreaView } from "react-native-safe-area-context";
 export const OwnerParkingDetailScreen = ({ route, navigation }: any) => {
   const { parkingId } = route.params;
   const [lot, setLot] = useState<ParkingLot | null>(null);

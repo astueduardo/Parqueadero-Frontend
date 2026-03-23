@@ -31,6 +31,7 @@ interface RegisterScreenProps {
 
 interface FormData {
     name: string;
+    username: String;
     email: string;
     password: string;
     confirmPassword: string;
@@ -38,6 +39,7 @@ interface FormData {
 
 interface FormErrors {
     name?: string;
+    username?: String
     email?: string;
     password?: string;
     confirmPassword?: string;
@@ -50,6 +52,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
 
     const [formData, setFormData] = useState<FormData>({
         name: '',
+        username: '',
         email: '',
         password: '',
         confirmPassword: '',
@@ -82,6 +85,11 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
                     errorMessage = 'El nombre es requerido';
                 }
                 break;
+            case 'username':
+                if (!validateRequired(formData.username)) {
+                    errorMessage = 'El apodo es requerido';
+                }
+                break;
             case 'email':
                 if (!validateRequired(formData.email)) {
                     errorMessage = 'El email es requerido';
@@ -110,7 +118,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
     };
 
     const validateForm = (): boolean => {
-        const fields: (keyof FormData)[] = ['name', 'email', 'password', 'confirmPassword'];
+        const fields: (keyof FormData)[] = ['name', 'username', 'email', 'password', 'confirmPassword'];
         let isValid = true;
 
         fields.forEach(field => {
@@ -125,6 +133,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
     const handleRegister = async () => {
         const allTouched = {
             name: true,
+            username: true,
             email: true,
             password: true,
             confirmPassword: true,
@@ -139,6 +148,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
         try {
             await register(
                 formData.name,
+                formData.username,
                 formData.email,
                 formData.password,
                 formData.confirmPassword
@@ -182,6 +192,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             <View style={styles.inputContainer}>
                 <Text style={styles.label}>
                     {field === 'name' && 'Nombre Completo'}
+                    {field === 'username' && 'Apodo'}
                     {field === 'email' && 'Email'}
                     {field === 'password' && 'Contraseña'}
                     {field === 'confirmPassword' && 'Confirmar Contraseña'}
@@ -234,7 +245,8 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
             >
                 <View style={styles.formWrapper}>
                     <View style={styles.formContainer}>
-                        {renderInput('name', 'Tu nombre', { autoCapitalize: 'words' })}
+                        {renderInput('name', 'Puede ser un nombre y un apellido', { autoCapitalize: 'words' })}
+                        {renderInput('username', 'Un apodo', { autoCapitalize: 'words' })}
                         {renderInput('email', 'correo@ejemplo.com', { keyboardType: 'email-address' })}
                         {renderInput('password', 'Mínimo 6 caracteres', { secureTextEntry: true })}
                         {renderInput('confirmPassword', 'Repite tu contraseña', { secureTextEntry: true })}

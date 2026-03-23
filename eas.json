@@ -12,6 +12,11 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://parqueadero-bakend.onrender.com/api",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID": "468037003282-9sgvb02374hn9m1hc5uh05djligqbblp.apps.googleusercontent.com",
+        "EXPO_PUBLIC_GOOGLE_CLIENT_ID_IOS": "468037003282-umg9g7jih1q0n37v3ce8bmpki9olskd5.apps.googleusercontent.com"
       }
     },
     "production": {

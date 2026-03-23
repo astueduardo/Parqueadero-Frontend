@@ -7,6 +7,7 @@ export interface LoginRequest {
 
 export interface RegisterRequest {
   name: string;
+  username: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -17,6 +18,7 @@ export interface AuthResponse {
   user: {
     id: string;
     name: string;
+    username: string;
     email: string;
     role?: "user" | "admin" | "owner" | "operator";
     auth_provider?: "local" | "google";
@@ -24,31 +26,30 @@ export interface AuthResponse {
   };
 }
 
-export interface UserProfile {
-  id: string;
-  name: string;
-  email: string;
-  role?: string;
-  googleId?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
 export const authApi = {
-  login: (data: LoginRequest) => api.login(data.email, data.password),
+  login: (data: LoginRequest) =>
+    api.login(data.email, data.password),
 
   register: (data: RegisterRequest) =>
-    api.register(data.name, data.email, data.password, data.confirmPassword),
+    api.register(data.name, data.username, data.email, data.password, data.confirmPassword),
 
-  getProfile: () => api.getProfile(),
+  getProfile: () =>
+    api.getProfile(),
 
-  logout: () => api.logout(),
+  logout: () =>
+    api.logout(),
 
-  getToken: () => api.getToken(),
+  getToken: () =>
+    api.getToken(),
 
-  getUser: () => api.getUser(),
+  getUser: () =>
+    api.getUser(),
 
-  // Google (mobile): send idToken to backend
-  googleLogin: (idToken: string) =>
-    api.api.post("/auth/google", { idToken }).then((r) => r.data),
+  // Google: recibe idToken, backend responde con access_token + user
+  // La persistencia la hace ApiService.saveSession para no duplicar lógica
+  googleLogin: async (idToken: string): Promise<AuthResponse> => {
+    const response = await api.api.post<AuthResponse>('/auth/google', { idToken });
+    await api.saveSession(response.data.access_token, response.data.user);
+    return response.data;
+  },
 };

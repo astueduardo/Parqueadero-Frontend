@@ -9,9 +9,9 @@ import {
   Alert,
   Modal,
   TextInput,
-  SafeAreaView,
   KeyboardAvoidingView,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { usersApi, User, UpdateUserDto } from "../../../api/users/users.api";
 import { useAuth } from "../../../hooks/useAuth";

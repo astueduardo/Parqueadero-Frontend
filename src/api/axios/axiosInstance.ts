@@ -2,31 +2,24 @@ import axios, { AxiosInstance } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
-// Función para obtener la URL según la plataforma
 const getApiUrl = () => {
-    // Si hay variable de entorno, úsala (producción/Render)
     if (process.env.EXPO_PUBLIC_API_URL) {
         return process.env.EXPO_PUBLIC_API_URL;
     }
-
     if (Platform.OS === 'android') {
         return 'http://10.0.2.2:3001/api';
     }
-
     return 'http://192.168.10.104:3001/api';
 };
+
 console.log('🔗 Conectando a:', getApiUrl());
-
-
-
-const API_BASE_URL = getApiUrl();
 
 class ApiService {
     api: AxiosInstance;
 
     constructor() {
         this.api = axios.create({
-            baseURL: API_BASE_URL,
+            baseURL: getApiUrl(),
         });
 
         this.api.interceptors.request.use(
@@ -35,7 +28,6 @@ class ApiService {
                 if (token) {
                     config.headers.Authorization = `Bearer ${token}`;
                 }
-                const fullUrl = `${config.baseURL || ''}${config.url || ''}`;
                 return config;
             },
             (error) => Promise.reject(error),
@@ -43,71 +35,61 @@ class ApiService {
 
         this.api.interceptors.response.use(
             (resp) => resp,
-            (error) => {
-                return Promise.reject(error);
-            },
+            (error) => Promise.reject(error),
         );
     }
 
-    async login(email: string, password: string) {
-        try {
-            const response = await this.api.post('/auth/login', { email, password });
-            if (response.data.access_token) {
-                await AsyncStorage.setItem('access_token', response.data.access_token);
-                await AsyncStorage.setItem('user', JSON.stringify(response.data.user));
-            }
-            return response.data;
-        } catch (error: any) {
-            console.log('❌ ERROR STATUS:', error.response?.status);
-            console.log('❌ ERROR DATA:', JSON.stringify(error.response?.data));
-            console.log('❌ ERROR MESSAGE:', error.message);
-            throw error;
-        }
-    }
-    async getMyVehicles() {
-        try {
-            const response = await this.api.get('/vehicles/my');
-            return response.data; // Devuelve los vehículos del usuario
-        } catch (error) {
-            throw error; // Puedes manejar errores aquí si es necesario
-        }
+    // ─── Persistencia ────────────────────────────────────────────────────────
+
+    async saveSession(access_token: string, user: object) {
+        await AsyncStorage.setItem('access_token', access_token);
+        await AsyncStorage.setItem('user', JSON.stringify(user));
     }
 
-    async register(name: string, email: string, password: string, confirmPassword: string) {
-        try {
-            const response = await this.api.post('/auth/register', {
-                name,
-                email,
-                password,
-                confirmPassword,
-            });
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    async getProfile() {
-        try {
-            const response = await this.api.get('/auth/profile');
-            return response.data;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    async logout() {
+    async clearSession() {
         await AsyncStorage.removeItem('access_token');
         await AsyncStorage.removeItem('user');
     }
 
-    async getToken() {
-        return await AsyncStorage.getItem('access_token');
+    async getToken(): Promise<string | null> {
+        return AsyncStorage.getItem('access_token');
     }
 
-    async getUser() {
+    async getUser(): Promise<any | null> {
         const user = await AsyncStorage.getItem('user');
         return user ? JSON.parse(user) : null;
+    }
+
+    // ─── Auth ─────────────────────────────────────────────────────────────────
+
+    async login(email: string, password: string) {
+        const response = await this.api.post('/auth/login', { email, password });
+        await this.saveSession(response.data.access_token, response.data.user);
+        return response.data;
+    }
+
+    async register(name: string, username: string, email: string, password: string, confirmPassword: string) {
+        const response = await this.api.post('/auth/register', {
+            name,
+            username,
+            email,
+            password,
+            confirmPassword,
+        });
+        // Si el backend devuelve token al registrarse, persistimos la sesión
+        if (response.data.access_token) {
+            await this.saveSession(response.data.access_token, response.data.user);
+        }
+        return response.data;
+    }
+
+    async getProfile() {
+        const response = await this.api.get('/auth/profile');
+        return response.data;
+    }
+
+    async logout() {
+        await this.clearSession();
     }
 }
 

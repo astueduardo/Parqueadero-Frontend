@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { styles } from "../../../styles/panels/panelA.styles";
 import { AuthContext } from '../../../context/AuthContext';
-
+import { SafeAreaView } from "react-native-safe-area-context";
 export const AdminHomeScreen: React.FC = () => {
 
   const auth = useContext(AuthContext);
