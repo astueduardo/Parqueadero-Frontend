@@ -18,6 +18,11 @@ import { OwnerParkingDetailScreen } from "../screens/operators/Owner/OwnerParkin
 import { OwnerCreateParkingScreen } from "../screens/operators/Owner/OwnerCreateParkingScreen";
 import { OwnerEditParkingScreen } from "../screens/operators/Owner/OwnerEditParkingScreen";
 import { OwnerSpacesScreen } from "../screens/operators/Owner/OwnerSpacesScreen";
+import { OperatorHomeScreen } from "../screens/operators/Owner/Validator/operator";
+import { QrScannerScreen } from "../screens/qr/QrScannerScreen";
+import { PaymentScreen } from "../screens/payments/PaymentScreen";
+import { PaymentSuccessScreen } from "../screens/payments/PaymentSuccessScreen";
+
 
 export type AppStackParamList = {
   Home: undefined;
@@ -26,15 +31,26 @@ export type AppStackParamList = {
   ReservationForm: { parking: any; space: any };
   ReservationSuccess: { reservation: any; parking: any; space: any; total: number; arrivalTime: string; departureTime: string };
   Vehicles: undefined;
+  QRGenerator: { reservationId: string };
   CreateVehicle: undefined;
+  OperatorHome: undefined;
   EditVehicle: { vehicleId: string };
   History: undefined;
   Profile: undefined;
+  Payment: { reservation: any; parking: any; total: number };
+  PaymentSuccess: { reservation: any; parking: any; total: number; paymentIntentId: string };
+
 };
 
 export type AdminStackParamList = {
   AdminHome: undefined;
   AdminUsers: undefined;
+};
+
+export type OperatorStackParamList = {
+  OperatorHome: undefined;
+  QrScanner: undefined;
+  QrValidate: { reservationId: string };
 };
 
 export type OwnerStackParamList = {
@@ -48,12 +64,20 @@ export type OwnerStackParamList = {
 const AppStack = createNativeStackNavigator<AppStackParamList>();
 const AdminStack = createNativeStackNavigator<AdminStackParamList>();
 const OwnerStack = createNativeStackNavigator<OwnerStackParamList>();
+const OperatorStack = createNativeStackNavigator<OperatorStackParamList>();
 
 const AdminNavigator = () => (
   <AdminStack.Navigator screenOptions={{ headerShown: false }}>
     <AdminStack.Screen name="AdminHome" component={AdminHomeScreen} />
     <AdminStack.Screen name="AdminUsers" component={AdminUsersScreen} />
   </AdminStack.Navigator>
+);
+
+const OperatorNavigator = () => (
+  <OperatorStack.Navigator screenOptions={{ headerShown: false }}>
+    <OperatorStack.Screen name="OperatorHome" component={OperatorHomeScreen} />
+    <OperatorStack.Screen name="QrScanner" component={QrScannerScreen} />
+  </OperatorStack.Navigator>
 );
 
 const OwnerNavigator = () => (
@@ -68,7 +92,6 @@ const OwnerNavigator = () => (
 
 );
 
-
 const UserNavigator = () => (
   <AppStack.Navigator screenOptions={{ headerShown: false }}>
     <AppStack.Screen name="Home" component={HomeScreen} />
@@ -81,6 +104,8 @@ const UserNavigator = () => (
     <AppStack.Screen name="EditVehicle" component={EditVehicleScreen} />
     <AppStack.Screen name="History" component={HistoryScreen} />
     <AppStack.Screen name="Profile" component={ProfileScreen} />
+    <AppStack.Screen name="Payment" component={PaymentScreen} />
+    <AppStack.Screen name="PaymentSuccess" component={PaymentSuccessScreen} />
   </AppStack.Navigator>
 );
 
@@ -89,6 +114,7 @@ export const AppNavigator = () => {
 
   if (user?.role === "admin") return <AdminNavigator />;
   if (user?.role === "owner") return <OwnerNavigator />;
+  if (user?.role === "operator") return <OperatorNavigator />; // ← nuevo
   return <UserNavigator />;
 };
 

@@ -1,5 +1,4 @@
-// shared/hooks/useRealtime.ts - Versión ultra simple
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppState } from 'react-native';
 
 export const useRealtime = <T>(
@@ -7,34 +6,40 @@ export const useRealtime = <T>(
     onUpdate: (data: T) => void,
     intervalMs: number = 5000
 ) => {
+    // ← useRef para evitar re-renders innecesarios
+    const fetchRef = useRef(fetchFunction);
+    const updateRef = useRef(onUpdate);
+
     useEffect(() => {
-        // Función para obtener datos
+        fetchRef.current = fetchFunction;
+        updateRef.current = onUpdate;
+    }, [fetchFunction, onUpdate]);
+
+    useEffect(() => {
+        let isActive = true;
+
         const fetchData = async () => {
+            if (!isActive) return;
             try {
-                const data = await fetchFunction();
-                onUpdate(data);
+                const data = await fetchRef.current();
+                if (isActive) updateRef.current(data);
             } catch (error) {
                 console.error('Error en tiempo real:', error);
             }
         };
 
-        // Llamada inicial
         fetchData();
 
-        // Configurar intervalo
         const intervalId = setInterval(fetchData, intervalMs);
 
-        // Escuchar cuando la app vuelve a primer plano
         const subscription = AppState.addEventListener('change', (state) => {
-            if (state === 'active') {
-                fetchData();
-            }
+            if (state === 'active') fetchData();
         });
 
-        // Limpiar al desmontar
         return () => {
+            isActive = false;
             clearInterval(intervalId);
             subscription.remove();
         };
-    }, []); // Solo se ejecuta una vez
+    }, [intervalMs]); // ← solo intervalMs como dep, funciones via ref
 };

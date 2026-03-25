@@ -4,7 +4,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role?: "user" | "admin" | "owner" | "operator";
+  role_id?: string;
   created_at?: string;
   updated_at?: string;
   auth_provider?: "local" | "google";

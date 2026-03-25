@@ -19,7 +19,7 @@ import { styles } from "../../../styles/panels/user";
 
 export const AdminUsersScreen: React.FC = ({ navigation }: any) => {
   const { user } = useAuth();
-
+  const { user: currentUser } = useAuth(); // ← ya lo tienes importado arriba
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -118,16 +118,15 @@ export const AdminUsersScreen: React.FC = ({ navigation }: any) => {
   /* 
     ELIMINAR
   */
-  const removeUser = (user: User) => {
-    // No permitir eliminar al propio admin
-    if (user.id === user?.id) {
+  const removeUser = (userToDelete: User) => {
+    if (userToDelete.id === currentUser?.id) {
       Alert.alert("Error", "No puedes eliminar tu propio usuario");
       return;
     }
 
     Alert.alert(
       "Confirmar eliminación",
-      `¿Estás seguro de eliminar a ${user.name}?`,
+      `¿Eliminar a ${userToDelete.name}?`,
       [
         { text: "Cancelar", style: "cancel" },
         {
@@ -135,12 +134,11 @@ export const AdminUsersScreen: React.FC = ({ navigation }: any) => {
           style: "destructive",
           onPress: async () => {
             try {
-              await usersApi.remove(user.id);
+              await usersApi.remove(userToDelete.id);
               fetchUsers();
               Alert.alert("Éxito", "Usuario eliminado correctamente");
             } catch (error) {
               Alert.alert("Error", "No se pudo eliminar el usuario");
-              console.error(error);
             }
           },
         },

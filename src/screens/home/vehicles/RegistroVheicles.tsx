@@ -91,52 +91,6 @@ export const VehicleListScreen = ({ navigation }: any) => {
       setDeletingId(null);
     }
   }, []);
-  const confirmDelete = async (vehicle_id: string, plateNumber: string) => {
-    console.log('🚀 confirmDelete - Iniciando eliminación:');
-    console.log('  vehicle_id:', vehicle_id);
-    console.log('  vehicle_id tipo:', typeof vehicle_id);
-    console.log('  plateNumber:', plateNumber);
-
-    setDeletingId(vehicle_id);
-
-    try {
-      console.log('📤 Llamando a deleteVehicle API...');
-      await deleteVehicle(vehicle_id);
-
-      console.log('✅ API respondió exitosamente');
-
-      // Animación de eliminación - actualizar estado local
-      setVehicles((prev) => {
-        const newVehicles = prev.filter((vehicle) => vehicle.vehicle_id !== vehicle_id);
-        console.log('📊 Vehículos después de eliminar:', newVehicles.length);
-        return newVehicles;
-      });
-
-      // Feedback exitoso
-      Alert.alert(
-        "¡Listo!",
-        `El vehículo ${plateNumber} fue eliminado correctamente.`,
-        [{ text: "OK" }]
-      );
-
-      console.log('✅ Eliminación completada con éxito');
-    } catch (error: any) {
-      console.error('❌ Error en confirmDelete:');
-      console.error('  Error completo:', error);
-      console.error('  Error.response:', error.response);
-      console.error('  Error.response.data:', error.response?.data);
-      console.error('  Error.response.status:', error.response?.status);
-      console.error('  Error.message:', error.message);
-
-      const errorMessage = error.response?.data?.message ||
-        "No se pudo eliminar el vehículo. Intenta nuevamente.";
-
-      Alert.alert("Error al eliminar", errorMessage);
-    } finally {
-      setDeletingId(null);
-      console.log('🏁 confirmDelete finalizado');
-    }
-  };
 
   const handleEdit = useCallback((vehicle: Vehicle) => {
     console.log('✏️  handleEdit llamado para:', vehicle.plate_number);

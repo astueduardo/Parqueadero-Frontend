@@ -31,18 +31,18 @@ interface RegisterScreenProps {
 
 interface FormData {
     name: string;
-    username: String;
+    username: string;
     email: string;
     password: string;
     confirmPassword: string;
 }
 
 interface FormErrors {
-    name?: string;
+    name?: String;
     username?: String
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
+    email?: String;
+    password?: String;
+    confirmPassword?: String;
 }
 
 export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
@@ -148,7 +148,7 @@ export const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) =>
         try {
             await register(
                 formData.name,
-                formData.username,
+                formData.username || '',
                 formData.email,
                 formData.password,
                 formData.confirmPassword

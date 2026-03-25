@@ -61,6 +61,8 @@ export const ReservationFormScreen = ({ route, navigation }: ReservationFormProp
             Alert.alert("Error", "Selecciona un vehículo para continuar");
             return;
         }
+        if (!validateTime()) return;
+
         try {
             setLoading(true);
             const today = new Date();

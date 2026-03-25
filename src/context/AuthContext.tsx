@@ -1,14 +1,19 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authApi } from '../api/auth/auth.api';
 
 export interface User {
   id: string;
+  avatar_url?: string;   // ← base64 o URL de Google
+  picture?: string;
   name: string;
-  username?: string;
+  username: string;
   email: string;
   role?: string;
+  role_id?: string;
   created_at?: string;
-  auth_provider?: "local" | "google";
+  updated_at?: string;
+  auth_provider?: 'local' | 'google';
 }
 
 export interface AuthContextType {
@@ -19,31 +24,37 @@ export interface AuthContextType {
   loginWithGoogle: (idToken: string) => Promise<any>;
   register: (name: string, username: string, email: string, password: string, confirmPassword: string) => Promise<void>;
   logout: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  getProfile: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// ✅ Función helper centralizada — un solo lugar para guardar sesión
+const saveSession = async (access_token: string, user: User) => {
+  await AsyncStorage.setItem('access_token', access_token);
+  await AsyncStorage.setItem('user', JSON.stringify(user));
+};
+
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // true hasta que verificamos sesión
+  const [isLoading, setIsLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Al montar: si hay token, verificamos contra el servidor (no solo AsyncStorage)
+  // Verificar sesión al iniciar
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const token = await authApi.getToken();
+        const token = await AsyncStorage.getItem('access_token');
         if (token) {
-          // Refresca desde el servidor — detecta si el usuario fue modificado o eliminado
-          const profile = await authApi.getProfile();
-          setUser(profile);
-          setIsLoggedIn(true);
+          const userData = await authApi.getUser();
+          if (userData) {
+            setUser(userData);
+            setIsLoggedIn(true);
+          }
         }
-      } catch {
-        // Token inválido o expirado — limpiamos sesión
-        await authApi.logout();
-        setUser(null);
+      } catch (error) {
+        console.error('Error verificando sesión:', error);
+        await AsyncStorage.multiRemove(['access_token', 'user']);
         setIsLoggedIn(false);
       } finally {
         setIsLoading(false);
@@ -54,29 +65,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       const response = await authApi.login({ email, password });
-      setUser(response.user);
-      setIsLoggedIn(true);
+      if (response) {
+        await saveSession(response.access_token, response.user); // ✅ centralizado
+        setUser(response.user);
+        setIsLoggedIn(true);
+      }
       return response;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const register = async (
-    name: string,
-    username: string,
-    email: string,
-    password: string,
-    confirmPassword: string,
-  ) => {
-    setIsLoading(true);
+  const register = async (name: string, username: string, email: string, password: string, confirmPassword: string) => {
     try {
+      setIsLoading(true);
       const response = await authApi.register({ name, username, email, password, confirmPassword });
-      // Solo seteamos sesión si el backend devuelve token al registrarse
-      if (response?.user) {
+      if (response) {
+        await saveSession(response.access_token, response.user); // ✅ centralizado
         setUser(response.user);
         setIsLoggedIn(true);
       }
@@ -86,12 +94,14 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const loginWithGoogle = async (idToken: string) => {
-    setIsLoading(true);
     try {
-      // authApi.googleLogin ya persiste el token en AsyncStorage
+      setIsLoading(true);
       const response = await authApi.googleLogin(idToken);
-      setUser(response.user);
-      setIsLoggedIn(true);
+      if (response) {
+        await saveSession(response.access_token, response.user); // ✅ centralizado
+        setUser(response.user);
+        setIsLoggedIn(true);
+      }
       return response;
     } finally {
       setIsLoading(false);
@@ -99,22 +109,24 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const logout = async () => {
-    setIsLoading(true);
     try {
+      setIsLoading(true);
       await authApi.logout();
+    } finally {
       setUser(null);
       setIsLoggedIn(false);
-    } finally {
       setIsLoading(false);
     }
   };
 
-  // Refresca el perfil del usuario desde el servidor (útil después de editar perfil)
-  const refreshProfile = async () => {
-    setIsLoading(true);
+  const getProfile = async () => {
     try {
+      setIsLoading(true);
       const profile = await authApi.getProfile();
-      setUser(profile);
+      if (profile) {
+        setUser(profile);
+        await AsyncStorage.setItem('user', JSON.stringify(profile));
+      }
     } finally {
       setIsLoading(false);
     }
@@ -122,14 +134,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   return (
     <AuthContext.Provider value={{
-      user,
-      isLoading,
-      isLoggedIn,
-      login,
-      loginWithGoogle,
-      register,
-      logout,
-      refreshProfile,
+      user, isLoading, isLoggedIn,
+      login, loginWithGoogle, register, logout, getProfile,
     }}>
       {children}
     </AuthContext.Provider>

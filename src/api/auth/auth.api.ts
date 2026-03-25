@@ -11,6 +11,7 @@ export interface RegisterRequest {
   email: string;
   password: string;
   confirmPassword: string;
+
 }
 
 export interface AuthResponse {
@@ -20,7 +21,7 @@ export interface AuthResponse {
     name: string;
     username: string;
     email: string;
-    role?: "user" | "admin" | "owner" | "operator";
+    role_id?: string;
     auth_provider?: "local" | "google";
     created_at?: string;
   };

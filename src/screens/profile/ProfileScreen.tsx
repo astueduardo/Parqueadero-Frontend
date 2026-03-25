@@ -1,12 +1,7 @@
 import React, { useContext, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  Alert,
-  TextInput,
-  ActivityIndicator,
+  View, Text, TouchableOpacity, ScrollView,
+  Alert, TextInput, ActivityIndicator, Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthContext } from '../../context/AuthContext';
@@ -14,51 +9,99 @@ import { useNavigation } from '@react-navigation/native';
 import { styles } from '../../styles/home/profile.styles';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import apiService from '../../api/axios/axiosInstance';
-
+import * as ImagePicker from 'expo-image-picker';
 
 export const ProfileScreen: React.FC = () => {
   const auth = useContext(AuthContext);
   const navigation = useNavigation<any>();
   const [editingName, setEditingName] = useState(false);
+  const [editingUsername, setEditingUsername] = useState(false);
   const [newName, setNewName] = useState('');
+  const [newUsername, setNewUsername] = useState('');
   const [savingName, setSavingName] = useState(false);
+  const [savingUsername, setSavingUsername] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
   if (!auth) return null;
   const { user, logout } = auth;
 
-  const handleEditName = () => {
-    setNewName(user?.name || '');
-    setEditingName(true);
+  // ── Avatar source ─────────────────────────────
+  const getAvatarSource = () => {
+    if (user?.avatar_url) return { uri: user.avatar_url };
+    if (user?.picture) return { uri: user.picture }; // Google photo
+    return null;
   };
 
+  const avatarSource = getAvatarSource();
+
+  // ── Editar foto ───────────────────────────────
+  const handlePickAvatar = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permiso requerido', 'Necesitamos acceso a tu galería');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1], // cuadrado para el círculo
+      quality: 0.5,   // compresión para reducir tamaño base64
+      base64: true,   // ← devuelve base64
+    });
+
+    if (result.canceled || !result.assets[0].base64) return;
+
+    setUploadingAvatar(true);
+    try {
+      const base64 = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      await apiService.api.patch('/users/me/avatar', { avatar_url: base64 });
+      await auth.getProfile();
+      Alert.alert('¡Listo!', 'Foto actualizada correctamente');
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo actualizar la foto');
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  // ── Editar nombre ─────────────────────────────
   const handleSaveName = async () => {
     if (!newName.trim()) {
-      Alert.alert("Error", "El nombre no puede estar vacío");
+      Alert.alert('Error', 'El nombre no puede estar vacío');
       return;
     }
     setSavingName(true);
     try {
-      await apiService.api.patch('/users/profile', { name: newName.trim() });
-      // Actualiza el nombre en el contexto
-      if (auth.user) auth.user.name = newName.trim();
+      await apiService.api.patch('/users/me', { name: newName.trim() });
+      await auth.getProfile();
       setEditingName(false);
-      Alert.alert("¡Éxito!", "Nombre actualizado correctamente");
     } catch (error: any) {
-      Alert.alert("Error", error.response?.data?.message || "No se pudo actualizar el nombre");
+      Alert.alert('Error', error.response?.data?.message || 'No se pudo actualizar');
     } finally {
       setSavingName(false);
     }
   };
 
+  // ── Editar username ───────────────────────────
+  const handleSaveUsername = async () => {
+    setSavingUsername(true);
+    try {
+      await apiService.api.patch('/users/me', { username: newUsername.trim() || null });
+      await auth.getProfile();
+      setEditingUsername(false);
+    } catch (error: any) {
+      Alert.alert('Error', error.response?.data?.message || 'No se pudo actualizar');
+    } finally {
+      setSavingUsername(false);
+    }
+  };
+
   const handleLogout = () => {
-    Alert.alert(
-      "Cerrar sesión",
-      "¿Estás seguro que deseas cerrar sesión?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { text: "Cerrar sesión", style: "destructive", onPress: logout },
-      ]
-    );
+    Alert.alert('Cerrar sesión', '¿Estás seguro?', [
+      { text: 'Cancelar', style: 'cancel' },
+      { text: 'Cerrar sesión', style: 'destructive', onPress: logout },
+    ]);
   };
 
   return (
@@ -73,13 +116,51 @@ export const ProfileScreen: React.FC = () => {
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        {/* User Card */}
+        {/* Avatar + nombre */}
         <View style={styles.card}>
           <View style={styles.userRow}>
-            <View style={styles.avatarPlaceholder}>
-              <Ionicons name="person" size={36} color="#2563EB" />
-            </View>
-            <View style={{ flex: 1 }}>
+
+            {/* Avatar con botón editar */}
+            <TouchableOpacity
+              onPress={handlePickAvatar}
+              disabled={uploadingAvatar}
+              style={{ position: 'relative' }}
+            >
+              {avatarSource ? (
+                <Image
+                  source={avatarSource}
+                  style={{
+                    width: 80, height: 80,
+                    borderRadius: 40,
+                    borderWidth: 2,
+                    borderColor: '#2563EB',
+                  }}
+                />
+              ) : (
+                <View style={styles.avatarPlaceholder}>
+                  {uploadingAvatar
+                    ? <ActivityIndicator color="#2563EB" />
+                    : <Text style={{ fontSize: 32, fontWeight: '700', color: '#2563EB' }}>
+                      {user?.name?.charAt(0).toUpperCase()}
+                    </Text>
+                  }
+                </View>
+              )}
+
+              {/* Ícono cámara sobre el avatar */}
+              {!uploadingAvatar && (
+                <View style={{
+                  position: 'absolute', bottom: 0, right: 0,
+                  backgroundColor: '#2563EB', borderRadius: 12,
+                  padding: 4, borderWidth: 2, borderColor: '#FFF',
+                }}>
+                  <Ionicons name="camera" size={12} color="#FFF" />
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <View style={{ flex: 1, marginLeft: 16 }}>
+              {/* Nombre editable */}
               {editingName ? (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <TextInput
@@ -92,10 +173,9 @@ export const ProfileScreen: React.FC = () => {
                       paddingVertical: 2, color: '#111827',
                     }}
                   />
-                  {savingName ? (
-                    <ActivityIndicator size="small" color="#2563EB" />
-                  ) : (
-                    <>
+                  {savingName
+                    ? <ActivityIndicator size="small" color="#2563EB" />
+                    : <>
                       <TouchableOpacity onPress={handleSaveName}>
                         <Ionicons name="checkmark" size={22} color="#2563EB" />
                       </TouchableOpacity>
@@ -103,25 +183,72 @@ export const ProfileScreen: React.FC = () => {
                         <Ionicons name="close" size={22} color="#9CA3AF" />
                       </TouchableOpacity>
                     </>
-                  )}
+                  }
                 </View>
               ) : (
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                   <Text style={styles.name}>{user?.name}</Text>
-                  <TouchableOpacity onPress={handleEditName}>
+                  <TouchableOpacity onPress={() => {
+                    setNewName(user?.name || '');
+                    setEditingName(true);
+                  }}>
                     <Ionicons name="pencil-outline" size={14} color="#6B7280" />
                   </TouchableOpacity>
                 </View>
               )}
-              <Text style={styles.subtext}>Usuario verificado</Text>
+
+              {/* Username editable */}
+              {editingUsername ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 6 }}>
+                  <TextInput
+                    value={newUsername}
+                    onChangeText={setNewUsername}
+                    autoFocus
+                    autoCapitalize="none"
+                    placeholder="@usuario"
+                    style={{
+                      flex: 1, fontSize: 14,
+                      borderBottomWidth: 1.5, borderBottomColor: '#2563EB',
+                      paddingVertical: 2, color: '#6B7280',
+                    }}
+                  />
+                  {savingUsername
+                    ? <ActivityIndicator size="small" color="#2563EB" />
+                    : <>
+                      <TouchableOpacity onPress={handleSaveUsername}>
+                        <Ionicons name="checkmark" size={20} color="#2563EB" />
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={() => setEditingUsername(false)}>
+                        <Ionicons name="close" size={20} color="#9CA3AF" />
+                      </TouchableOpacity>
+                    </>
+                  }
+                </View>
+              ) : (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                  <Text style={styles.subtext}>
+                    {user?.username ? `@${user.username}` : 'Sin username'}
+                  </Text>
+                  <TouchableOpacity onPress={() => {
+                    setNewUsername(user?.username || '');
+                    setEditingUsername(true);
+                  }}>
+                    <Ionicons name="pencil-outline" size={12} color="#9CA3AF" />
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </View>
 
           <InfoRow icon="mail" label="Correo" value={user?.email} />
-          <InfoRow icon="shield-checkmark-outline" label="Proveedor" value={user?.auth_provider || 'local'} />
+          <InfoRow
+            icon={user?.auth_provider === 'google' ? 'logo-google' : 'lock-closed-outline'}
+            label="Proveedor"
+            value={user?.auth_provider === 'google' ? 'Google' : 'Email y contraseña'}
+          />
         </View>
 
-        {/* Mis cosas */}
+        {/* Mi cuenta */}
         <SectionCard title="Mi cuenta">
           <MenuItem
             icon="car-outline"
@@ -133,11 +260,6 @@ export const ProfileScreen: React.FC = () => {
             label="Historial de reservas"
             onPress={() => navigation.navigate('History')}
           />
-        </SectionCard>
-
-        <SectionCard title="Preferencias">
-          <MenuItem icon="notifications-outline" label="Notificaciones" />
-          <MenuItem icon="moon-outline" label="Tema oscuro" />
         </SectionCard>
 
         <SectionCard title="Legal">

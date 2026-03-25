@@ -3,13 +3,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 
 const getApiUrl = () => {
+    // ✅ Variable de entorno primero — para producción
     if (process.env.EXPO_PUBLIC_API_URL) {
         return process.env.EXPO_PUBLIC_API_URL;
     }
+
+    // ✅ Para desarrollo local
     if (Platform.OS === 'android') {
         return 'http://10.0.2.2:3001/api';
     }
-    return 'http://192.168.10.104:3001/api';
+
+
 };
 
 console.log('🔗 Conectando a:', getApiUrl());

@@ -191,7 +191,21 @@ Reserva confirmada ✅
                             <Text>Compartir reserva</Text>
                         </Text>
                     </TouchableOpacity>
-
+                    <TouchableOpacity
+                        style={{
+                            backgroundColor: '#10B981', paddingVertical: 14,
+                            borderRadius: 8, alignItems: 'center', marginBottom: 12,
+                        }}
+                        onPress={() => navigation.navigate('Payment', {
+                            reservation,
+                            parking,
+                            total,
+                        })}
+                    >
+                        <Text style={{ color: '#FFF', fontWeight: '600', fontSize: 16 }}>
+                            💳 Pagar ahora
+                        </Text>
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={{
                             backgroundColor: "#E5E7EB",

@@ -133,30 +133,35 @@ export const ParkingCard = ({
                 />
             </View>
 
-            {/* TIMESTAMP (opcional) */}
+            {/* TIMESTAMP */}
             {lot?.lastUpdated && (
                 <Text style={{ fontSize: 10, color: colors.textMuted, marginTop: 4 }}>
                     Actualizado: {new Date(lot.lastUpdated).toLocaleTimeString()}
                 </Text>
             )}
-            <TouchableOpacity
-                onPress={() => openGoogleMaps(lot.latitude ?? 0, lot.longitude ?? 0)}
-                style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: colors.primary,
-                    borderRadius: 10,
-                    padding: 10,
-                    marginTop: 8,
-                    gap: 6,
-                }}
-            >
-                <Ionicons name="navigate-outline" size={16} color="#FFF" />
-                <Text style={{ color: '#FFF', fontWeight: '600', fontSize: 13 }}>
-                    Cómo llegar
-                </Text>
-            </TouchableOpacity>
+
+            {/* BOTÓN CÓMO LLEGAR — solo si hay coordenadas reales */}
+            {lot.latitude && lot.longitude ? (
+                <TouchableOpacity
+                    onPress={() => openGoogleMaps(lot.latitude!, lot.longitude!)}
+                    style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: colors.primary,
+                        borderRadius: 10,
+                        padding: 10,
+                        marginTop: 8,
+                        gap: 6,
+                    }}
+                >
+                    <Ionicons name="navigate-outline" size={16} color="#FFF" />
+                    <Text style={{ color: '#FFF', fontWeight: '600', fontSize: 13 }}>
+                        Cómo llegar
+                    </Text>
+                </TouchableOpacity>
+            ) : null}
+
         </TouchableOpacity>
     );
 };

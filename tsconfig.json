@@ -1,14 +1,14 @@
-// tsconfig.json (principal de tu proyecto)
-{
-  "extends": "expo/tsconfig.base",
-  "compilerOptions": {
-    "forceConsistentCasingInFileNames": true,
-    "strict": true
-  },
-  "exclude": [
-    "node_modules",
-    "babel.config.js",
-    "metro.config.js",
-    "jest.config.js"
-  ]
-}
+  // tsconfig.json (principal de tu proyecto)
+  {
+    "extends": "expo/tsconfig.base",
+    "compilerOptions": {
+      "forceConsistentCasingInFileNames": true,
+      "strict": true
+    },
+    "exclude": [
+      "node_modules",
+      "babel.config.js",
+      "metro.config.js",
+      "jest.config.js"
+    ]
+  }
